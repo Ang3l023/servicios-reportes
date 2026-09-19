@@ -7,9 +7,6 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  console.log('--- Nueva petición POST recibida ---');
-  console.log('Headers:', JSON.stringify(req.headers));
-
   if (req.method !== 'POST') {
     res.writeHead(302, { Location: '/' });
     return res.end();
@@ -18,30 +15,22 @@ export default async function handler(req, res) {
   return new Promise((resolve) => {
     const savedFiles = [];
     const filePromises = [];
+    const textFields = {};
 
     try {
-      // Normalizar el header Content-Type para evitar fallos de parser en Motorola/Honor
       const contentType = req.headers['content-type'] || req.headers['Content-Type'] || '';
-
-      if (!contentType.includes('multipart/form-data')) {
-        console.warn('ContentType no es multipart:', contentType);
-        res.writeHead(302, { Location: '/?error=invalid_content_type' });
-        res.end();
-        return resolve();
-      }
 
       const busboy = Busboy({
         headers: {
           ...req.headers,
-          'content-type': contentType // Header limpio
+          'content-type': contentType
         }
       });
 
+      // 1. Archivos directos
       busboy.on('file', (fieldname, file, info) => {
         const { filename, mimeType } = info;
         const chunks = [];
-
-        console.log(`Leyendo archivo de campo "${fieldname}":`, filename, mimeType);
 
         const p = new Promise((resFile) => {
           file.on('data', (d) => chunks.push(d));
@@ -60,19 +49,23 @@ export default async function handler(req, res) {
         filePromises.push(p);
       });
 
+      // 2. Campos de texto (Captura de URIs o Base64 enviado como texto)
+      busboy.on('field', (fieldname, val) => {
+        textFields[fieldname] = val;
+      });
+
       busboy.on('finish', async () => {
         await Promise.all(filePromises);
 
-        console.log(`Total imágenes procesadas en Busboy: ${savedFiles.length}`);
+        console.log(`Archivos: ${savedFiles.length}, Campos de texto:`, Object.keys(textFields));
 
         if (savedFiles.length === 0) {
-          console.warn('Busboy finalizó pero no encontró binarios de imagen');
-          res.writeHead(302, { Location: '/?error=no_images_found' });
+          console.warn('Cuerpo de la petición vacío o sin binarios válidos');
+          res.writeHead(302, { Location: '/?error=empty_body' });
           res.end();
           return resolve();
         }
 
-        // Retornar HTML que inyecta las imágenes en sessionStorage
         const html = `
           <!DOCTYPE html>
           <html>
@@ -82,7 +75,7 @@ export default async function handler(req, res) {
                 try {
                   sessionStorage.setItem('pwa_shared_files', JSON.stringify(${JSON.stringify(savedFiles)}));
                 } catch(e) {
-                  console.error('Error guardando en sessionStorage:', e);
+                  console.error(e);
                 }
                 window.location.href = '/share-target?fromShare=true';
               </script>
@@ -96,7 +89,7 @@ export default async function handler(req, res) {
       });
 
       busboy.on('error', (err) => {
-        console.error('Error durante la lectura con Busboy:', err);
+        console.error('Error en Busboy:', err);
         res.writeHead(302, { Location: '/?error=busboy_error' });
         res.end();
         resolve();
@@ -105,7 +98,7 @@ export default async function handler(req, res) {
       req.pipe(busboy);
 
     } catch (err) {
-      console.error('Excepción crítica en Handler:', err);
+      console.error('Excepción crítica:', err);
       res.writeHead(302, { Location: '/?error=critical_exception' });
       res.end();
       resolve();

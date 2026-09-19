@@ -26,20 +26,62 @@
     "enctype": "multipart/form-data",
     "params": {
       "files": [
-        {
-          "name": "media",
-          "accept": [
-            "image/*",
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/heic",
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".webp"
-          ]
-        }
+      {
+              "name": "media",
+              "accept": [
+                "image/*",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp"
+              ]
+            },
+            {
+              "name": "files",
+              "accept": [
+                "image/*",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp"
+              ]
+            },
+            {
+              "name": "file",
+              "accept": [
+                "image/*",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp"
+              ]
+            },
+            {
+              "name": "image",
+              "accept": [
+                "image/*",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp"
+              ]
+            }
       ]
     }
     }
