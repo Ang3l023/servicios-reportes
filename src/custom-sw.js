@@ -35,11 +35,11 @@ async function saveFilesToIndexedDB(files) {
   });
 }
 
-// Interceptamos la petición POST para procesar las imágenes localmente
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (event.request.method === 'POST' && url.pathname.includes('/api/share-target')) {
+  // Capturar cualquier petición POST a share-target
+  if (event.request.method === 'POST' && url.pathname.includes('share-target')) {
     event.respondWith(
       (async () => {
         try {
@@ -47,19 +47,24 @@ self.addEventListener('fetch', (event) => {
           const files = [];
 
           for (const [key, value] of formData.entries()) {
-            if (value && typeof value === 'object' && value.name) {
-              files.push(value);
+            // Si es un archivo o Blob con tipo de imagen
+            if (value && typeof value === 'object') {
+              if (value.name || (value.type && value.type.startsWith('image/'))) {
+                files.push(value);
+              }
             }
           }
 
           if (files.length > 0) {
             await saveFilesToIndexedDB(files);
+          } else {
+            console.warn('FormData no contenía archivos reconocibles');
           }
         } catch (err) {
-          console.error('Error al procesar imágenes en Service Worker:', err);
+          console.error('Error al interceptar en Service Worker:', err);
         }
 
-        // Si el Service Worker falla o completa, la peticion redirige a la ruta Angular en GET
+        // Redirigir siempre mediante GET (303)
         return Response.redirect('/share-target?fromShare=true', 303);
       })()
     );
