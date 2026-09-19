@@ -1,6 +1,5 @@
 importScripts('./ngsw-worker.js');
 
-// Nombre de la base de datos IndexedDB local
 const DB_NAME = 'pwa-shared-files-db';
 const STORE_NAME = 'shared-files';
 
@@ -36,18 +35,17 @@ async function saveFilesToIndexedDB(files) {
   });
 }
 
-// Interceptar la petición POST de Android Share Target
+// Interceptamos la petición POST para evitar que llegue al servidor Vercel (Error 405)
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (event.request.method === 'POST' && url.pathname === '/share-target') {
+  if (event.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
     event.respondWith(
       (async () => {
         try {
           const formData = await event.request.formData();
           const files = [];
 
-          // Extraer cualquier archivo presente en el FormData (media, files, image, etc.)
           for (const [key, value] of formData.entries()) {
             if (value && typeof value === 'object' && value.name) {
               files.push(value);
@@ -61,7 +59,7 @@ self.addEventListener('fetch', (event) => {
           console.error('Error procesando archivos en SW:', err);
         }
 
-        // Redirigir a la ruta Angular mediante GET (HTTP 303)
+        // Redirigimos usando un GET 303 que Vercel sí acepta para las rutas de Angular
         return Response.redirect('/share-target?fromShare=true', 303);
       })()
     );
