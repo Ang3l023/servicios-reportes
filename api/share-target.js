@@ -1,10 +1,9 @@
-import formidable from 'formidable';
-import fs from 'fs';
+import Busboy from 'busboy';
 import { kv } from '@vercel/kv';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Esencial para procesar el Stream multipart manualmente
   },
 };
 
@@ -13,61 +12,66 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const form = formidable({
-    multiples: true,
-    keepExtensions: true
-  });
-
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error('Error al parsear form:', err);
-      return res.status(500).json({ error: 'Error interno al procesar imagen' });
-    }
-
-    // EXTRAER CUALQUIER ARCHIVO: Si no lo encuentra en 'media', toma el primer campo disponible
-    let rawMedia = files.media;
-
-    if (!rawMedia) {
-      const keys = Object.keys(files);
-      if (keys.length > 0) {
-        rawMedia = files[keys[0]]; // Toma el primer campo de archivos que haya llegado
-      }
-    }
-
-    if (!rawMedia) {
-      console.warn('Petición recibida sin ningún archivo adjunto');
-      return res.writeHead(303, { Location: '/share-target?error=no_files' }).end();
-    }
-
-    const fileList = Array.isArray(rawMedia) ? rawMedia : [rawMedia];
-    const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
+  return new Promise((resolve) => {
     const savedFiles = [];
+    const filePromises = [];
 
-    for (const file of fileList) {
-      const path = file.filepath || file.path;
-      const originalName = file.originalFilename || file.name || 'shared_image.jpg';
-      const mimeType = file.mimetype || file.type || 'image/jpeg';
+    try {
+      const busboy = Busboy({ headers: req.headers });
 
-      if (path && fs.existsSync(path)) {
-        const fileBuffer = fs.readFileSync(path);
+      busboy.on('file', (fieldname, file, info) => {
+        const { filename, mimeType } = info;
+        const chunks = [];
 
-        savedFiles.push({
-          name: originalName,
-          type: mimeType,
-          data: fileBuffer.toString('base64')
+        const filePromise = new Promise((resFile) => {
+          file.on('data', (data) => chunks.push(data));
+          file.on('end', () => {
+            const buffer = Buffer.concat(chunks);
+            if (buffer.length > 0) {
+              savedFiles.push({
+                name: filename || 'shared_image.jpg',
+                type: mimeType || 'image/jpeg',
+                data: buffer.toString('base64'),
+              });
+            }
+            resFile();
+          });
         });
-      }
+
+        filePromises.push(filePromise);
+      });
+
+      busboy.on('finish', async () => {
+        await Promise.all(filePromises);
+
+        console.log(`Archivos extraídos con Busboy: ${savedFiles.length}`);
+
+        if (savedFiles.length === 0) {
+          console.warn('Busboy no encontró imágenes en el cuerpo');
+          res.writeHead(303, { Location: '/share-target?error=no_files' }).end();
+          return resolve();
+        }
+
+        const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
+        await kv.set(`share:${shareId}`, savedFiles, { ex: 300 });
+
+        res.writeHead(303, { Location: `/share-target?shareId=${shareId}` });
+        res.end();
+        resolve();
+      });
+
+      busboy.on('error', (err) => {
+        console.error('Error en Busboy:', err);
+        res.writeHead(303, { Location: '/share-target?error=parse_failed' }).end();
+        resolve();
+      });
+
+      // Transmitir el request al parser
+      req.pipe(busboy);
+    } catch (err) {
+      console.error('Error inicializando Busboy:', err);
+      res.writeHead(303, { Location: '/share-target?error=server_error' }).end();
+      resolve();
     }
-
-    if (savedFiles.length === 0) {
-      return res.writeHead(303, { Location: '/share-target?error=empty_files' }).end();
-    }
-
-    // Guardar en Upstash/Redis por 5 minutos
-    await kv.set(`share:${shareId}`, savedFiles, { ex: 300 });
-
-    // Redirigir a Angular
-    res.writeHead(303, { Location: `/share-target?shareId=${shareId}` });
-    res.end();
   });
 }
