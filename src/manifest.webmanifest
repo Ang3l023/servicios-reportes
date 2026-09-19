@@ -30,6 +30,10 @@
           "name": "media",
           "accept": [
             "image/*",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/heic",
             ".jpg",
             ".jpeg",
             ".png",
