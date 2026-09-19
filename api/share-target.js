@@ -1,10 +1,11 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import { kv } from '@vercel/kv'; // Si usas Vercel KV Store para persistencia
+import { kv } from '@vercel/kv';
 
+// IMPORTANTE: Desactivar el body parser nativo de Vercel para procesar multipart
 export const config = {
   api: {
-    bodyParser: false, // Desactivar el body parser por defecto para procesar multipart/form-data
+    bodyParser: false,
   },
 };
 
@@ -13,36 +14,54 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const form = formidable({ multiples: true });
+  const form = formidable({
+    multiples: true,
+    keepExtensions: true
+  });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
+      console.error('Error procesando multipart:', err);
       return res.status(500).json({ error: 'Error al procesar la imagen' });
     }
 
-    const fileList = Array.isArray(files.media) ? files.media : [files.media];
-    const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
+    // Android envía la clave 'media' declarada en tu manifest
+    const rawMedia = files.media;
 
+    if (!rawMedia) {
+      console.warn('No se encontró el campo "media" en la petición');
+      return res.writeHead(303, { Location: '/share-target?error=no_media' }).end();
+    }
+
+    const fileList = Array.isArray(rawMedia) ? rawMedia : [rawMedia];
+    const shareId = Date.now().toString() + Math.random().toString(36).substring(2, 7);
     const savedFiles = [];
 
     for (const file of fileList) {
-      if (file && file.filepath) {
-        const fileBuffer = fs.readFileSync(file.filepath);
-        const base64Data = fileBuffer.toString('base64');
+      // Compatibilidad v2 y v3 de Formidable (filepath o path)
+      const path = file.filepath || file.path;
+      const originalName = file.originalFilename || file.name || 'shared_image.jpg';
+      const mimeType = file.mimetype || file.type || 'image/jpeg';
+
+      if (path && fs.existsSync(path)) {
+        const fileBuffer = fs.readFileSync(path);
 
         savedFiles.push({
-          name: file.originalFilename || 'shared_image.jpg',
-          type: file.mimetype,
-          data: base64Data
+          name: originalName,
+          type: mimeType,
+          data: fileBuffer.toString('base64')
         });
       }
     }
 
-    // Almacenamos temporalmente las imágenes en KV Store con expiración de 5 minutos
-    // (Asegúrate de vincular una Vercel KV Storage en el panel de Vercel)
+    if (savedFiles.length === 0) {
+      return res.writeHead(303, { Location: '/share-target?error=empty_files' }).end();
+    }
+
+    // Guardar en Redis/Upstash con expiración de 5 minutos (300 s)
     await kv.set(`share:${shareId}`, savedFiles, { ex: 300 });
 
-    // Redireccionamos a la ruta Angular GET con el ID
+    // Redirigir a Angular enviando el ID por querystring
     res.writeHead(303, { Location: `/share-target?shareId=${shareId}` });
     res.end();
   });
