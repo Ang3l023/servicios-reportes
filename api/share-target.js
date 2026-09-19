@@ -2,7 +2,6 @@ import formidable from 'formidable';
 import fs from 'fs';
 import { kv } from '@vercel/kv';
 
-// IMPORTANTE: Desactivar el body parser nativo de Vercel para procesar multipart
 export const config = {
   api: {
     bodyParser: false,
@@ -21,16 +20,23 @@ export default async function handler(req, res) {
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      console.error('Error procesando multipart:', err);
-      return res.status(500).json({ error: 'Error al procesar la imagen' });
+      console.error('Error al parsear form:', err);
+      return res.status(500).json({ error: 'Error interno al procesar imagen' });
     }
 
-    // Android envía la clave 'media' declarada en tu manifest
-    const rawMedia = files.media;
+    // EXTRAER CUALQUIER ARCHIVO: Si no lo encuentra en 'media', toma el primer campo disponible
+    let rawMedia = files.media;
 
     if (!rawMedia) {
-      console.warn('No se encontró el campo "media" en la petición');
-      return res.writeHead(303, { Location: '/share-target?error=no_media' }).end();
+      const keys = Object.keys(files);
+      if (keys.length > 0) {
+        rawMedia = files[keys[0]]; // Toma el primer campo de archivos que haya llegado
+      }
+    }
+
+    if (!rawMedia) {
+      console.warn('Petición recibida sin ningún archivo adjunto');
+      return res.writeHead(303, { Location: '/share-target?error=no_files' }).end();
     }
 
     const fileList = Array.isArray(rawMedia) ? rawMedia : [rawMedia];
@@ -38,7 +44,6 @@ export default async function handler(req, res) {
     const savedFiles = [];
 
     for (const file of fileList) {
-      // Compatibilidad v2 y v3 de Formidable (filepath o path)
       const path = file.filepath || file.path;
       const originalName = file.originalFilename || file.name || 'shared_image.jpg';
       const mimeType = file.mimetype || file.type || 'image/jpeg';
@@ -58,10 +63,10 @@ export default async function handler(req, res) {
       return res.writeHead(303, { Location: '/share-target?error=empty_files' }).end();
     }
 
-    // Guardar en Redis/Upstash con expiración de 5 minutos (300 s)
+    // Guardar en Upstash/Redis por 5 minutos
     await kv.set(`share:${shareId}`, savedFiles, { ex: 300 });
 
-    // Redirigir a Angular enviando el ID por querystring
+    // Redirigir a Angular
     res.writeHead(303, { Location: `/share-target?shareId=${shareId}` });
     res.end();
   });
