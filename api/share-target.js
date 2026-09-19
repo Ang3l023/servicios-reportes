@@ -3,7 +3,7 @@ import { kv } from '@vercel/kv';
 
 export const config = {
   api: {
-    bodyParser: false, // Esencial para procesar el Stream multipart manualmente
+    bodyParser: false,
   },
 };
 
@@ -44,10 +44,8 @@ export default async function handler(req, res) {
       busboy.on('finish', async () => {
         await Promise.all(filePromises);
 
-        console.log(`Archivos extraídos con Busboy: ${savedFiles.length}`);
-
         if (savedFiles.length === 0) {
-          console.warn('Busboy no encontró imágenes en el cuerpo');
+          console.warn('Sin archivos en el cuerpo de la petición');
           res.writeHead(303, { Location: '/share-target?error=no_files' }).end();
           return resolve();
         }
@@ -60,16 +58,9 @@ export default async function handler(req, res) {
         resolve();
       });
 
-      busboy.on('error', (err) => {
-        console.error('Error en Busboy:', err);
-        res.writeHead(303, { Location: '/share-target?error=parse_failed' }).end();
-        resolve();
-      });
-
-      // Transmitir el request al parser
       req.pipe(busboy);
     } catch (err) {
-      console.error('Error inicializando Busboy:', err);
+      console.error('Error procesando Busboy:', err);
       res.writeHead(303, { Location: '/share-target?error=server_error' }).end();
       resolve();
     }
