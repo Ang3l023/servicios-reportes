@@ -1,67 +1,46 @@
 import { Injectable } from '@angular/core';
 
-const DB_NAME = 'reporte-servicio-db';
-const STORE_NAME = 'shared-images';
-
 @Injectable({
   providedIn: 'root'
 })
 export class SharedFilesService {
+  private dbName = 'pwa-shared-files-db';
+  private storeName = 'shared-files';
 
-  private openDatabase(): Promise<IDBDatabase> {
+  private openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, 1);
-
-      request.onupgradeneeded = () => {
-        const db = request.result;
-
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME);
-        }
-      };
-
+      const request = indexedDB.open(this.dbName, 1);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
   }
 
   async getSharedImages(): Promise<File[]> {
-    const db = await this.openDatabase();
-
+    const db = await this.openDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE_NAME, 'readonly');
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.get('pending');
+      const tx = db.transaction(this.storeName, 'readonly');
+      const store = tx.objectStore(this.storeName);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        resolve(request.result ?? []);
-        db.close();
+        const records = request.result || [];
+        const files = records.map((r: any) => r.file);
+        resolve(files);
       };
 
-      request.onerror = () => {
-        reject(request.error);
-        db.close();
-      };
+      request.onerror = () => reject(request.error);
     });
   }
 
   async clearSharedImages(): Promise<void> {
-    const db = await this.openDatabase();
-
+    const db = await this.openDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const tx = db.transaction(this.storeName, 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const request = store.clear();
 
-      transaction.objectStore(STORE_NAME).delete('pending');
-
-      transaction.oncomplete = () => {
-        db.close();
-        resolve();
-      };
-
-      transaction.onerror = () => {
-        db.close();
-        reject(transaction.error);
-      };
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
     });
   }
 }

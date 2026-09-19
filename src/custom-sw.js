@@ -1,84 +1,69 @@
-// Cargar el Service Worker oficial de Angular
-importScripts('/ngsw-worker.js');
+importScripts('./ngsw-worker.js');
 
-const DB_NAME = 'reporte-servicio-db';
-const STORE_NAME = 'shared-images';
-const DB_VERSION = 1;
+// Nombre de la base de datos IndexedDB local
+const DB_NAME = 'pwa-shared-files-db';
+const STORE_NAME = 'shared-files';
 
-function openDatabase() {
+function openDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = () => {
-      const db = request.result;
-
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
+        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
       }
     };
-
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-async function saveImages(files) {
-  const db = await openDatabase();
-
+async function saveFilesToIndexedDB(files) {
+  const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
 
-    store.put(files, 'pending');
+    for (const file of files) {
+      store.add({
+        file: file,
+        timestamp: Date.now()
+      });
+    }
 
-    transaction.oncomplete = () => {
-      db.close();
-      resolve();
-    };
-
-    transaction.onerror = () => {
-      db.close();
-      reject(transaction.error);
-    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 }
 
+// Interceptar la petición POST de Android Share Target
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (
-    url.origin !== self.location.origin ||
-    url.pathname !== '/share-target' ||
-    event.request.method !== 'POST'
-  ) {
-    return;
-  }
+  if (event.request.method === 'POST' && url.pathname === '/share-target') {
+    event.respondWith(
+      (async () => {
+        try {
+          const formData = await event.request.formData();
+          const files = [];
 
-  event.respondWith(handleShare(event.request));
+          // Extraer cualquier archivo presente en el FormData (media, files, image, etc.)
+          for (const [key, value] of formData.entries()) {
+            if (value && typeof value === 'object' && value.name) {
+              files.push(value);
+            }
+          }
+
+          if (files.length > 0) {
+            await saveFilesToIndexedDB(files);
+          }
+        } catch (err) {
+          console.error('Error procesando archivos en SW:', err);
+        }
+
+        // Redirigir a la ruta Angular mediante GET (HTTP 303)
+        return Response.redirect('/share-target?fromShare=true', 303);
+      })()
+    );
+  }
 });
-
-async function handleShare(request) {
-  try {
-    const formData = await request.formData();
-
-    const files = formData
-      .getAll('media')
-      .filter((file) =>
-        file instanceof File &&
-        file.size > 0 &&
-        file.type.startsWith('image/')
-      );
-
-    if (files.length === 0) {
-      return Response.redirect('/share-target?shared=empty', 303);
-    }
-
-    await saveImages(files);
-
-    return Response.redirect('/share-target?shared=success', 303);
-  } catch (error) {
-    console.error('Error al recibir archivos compartidos:', error);
-
-    return Response.redirect('/share-target?shared=error', 303);
-  }
-}
