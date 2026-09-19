@@ -38,8 +38,8 @@ async function saveFilesToIndexedDB(files) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Capturar cualquier petición POST a share-target
-  if (event.request.method === 'POST' && url.pathname.includes('share-target')) {
+  // Intercepta el POST enviado por Android
+  if (event.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
     event.respondWith(
       (async () => {
         try {
@@ -47,24 +47,19 @@ self.addEventListener('fetch', (event) => {
           const files = [];
 
           for (const [key, value] of formData.entries()) {
-            // Si es un archivo o Blob con tipo de imagen
-            if (value && typeof value === 'object') {
-              if (value.name || (value.type && value.type.startsWith('image/'))) {
-                files.push(value);
-              }
+            if (value && typeof value === 'object' && value.name) {
+              files.push(value);
             }
           }
 
           if (files.length > 0) {
             await saveFilesToIndexedDB(files);
-          } else {
-            console.warn('FormData no contenía archivos reconocibles');
           }
         } catch (err) {
-          console.error('Error al interceptar en Service Worker:', err);
+          console.error('Error procesando archivos en SW:', err);
         }
 
-        // Redirigir siempre mediante GET (303)
+        // Redirige por GET a la pantalla Angular evitando que Vercel arroje 405
         return Response.redirect('/share-target?fromShare=true', 303);
       })()
     );
