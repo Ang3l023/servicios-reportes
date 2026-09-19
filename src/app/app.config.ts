@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_LOCALE, useValue: 'es-PE' },
     { provide: MAT_DATE_FORMATS, useValue: CUSTOM_DATE_FORMATS },
     provideHttpClient(),
-    provideServiceWorker('custom-sw.js', {
+    provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     })
