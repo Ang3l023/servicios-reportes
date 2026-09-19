@@ -20,7 +20,7 @@ export class ExportService {
       const saveAs = (FileSaverModule as any).saveAs || (FileSaverModule as any).default?.saveAs || (FileSaverModule as any).default;
 
       // 1. Cargar plantilla
-      const response = await fetch('assets/templates/informe-tecnico-template.docx');
+      const response = await fetch(this.getTemplateUrl());
       if (!response.ok) {
         throw new Error(`No se pudo cargar la plantilla (${response.status})`);
       }
@@ -39,11 +39,17 @@ export class ExportService {
         centered: true,
         fileType: 'docx' as const,
         getImage: (tagValue: string) => this.base64ToUint8Array(tagValue),
-        getSize: (_img: any, _tagValue: string, tagName: string): [number, number] => {
-          if (tagName === 'firstImage') {
-            return [500, 620];
-          }
-          return [460, 280];
+        getSize: (img: any, _tagValue: string, tagName: string): [number, number] => {
+          const isFirst = tagName === 'firstImage';
+          const maxW = 687;
+          const maxH = isFirst ? 720 : 400;
+
+          // Si no hay dimensiones, usa el recuadro
+          const w = img?.width || maxW;
+          const h = img?.height || maxH;
+
+          const scale = Math.min(maxW / w, maxH / h, 1);
+          return [Math.round(w * scale), Math.round(h * scale)];
         }
       };
 
@@ -61,27 +67,22 @@ export class ExportService {
 
       const imagesBase64: string[] = [];
       for (const img of sortedImages) {
-        if (img.file) {
-          const base64 = await this.fileToBase64(img.file);
-          imagesBase64.push(base64);
-        }
+        if (!img.file) continue;
+        imagesBase64.push(await this.fileToBase64(img.file));
       }
 
-      const firstImage = imagesBase64.length > 0 ? imagesBase64[0] : null;
+      const firstImage = imagesBase64[0] || null;
+      const rest = imagesBase64.slice(1);
 
-      const otherImages: {
+      const imagePages: Array<{
         img1: string | null;
         img2: string | null;
-        label1: string;
-        label2: string;
-      }[] = [];
+      }> = [];
 
-      for (let i = 1; i < imagesBase64.length; i += 2) {
-        otherImages.push({
-          img1: imagesBase64[i] || null,
-          img2: imagesBase64[i + 1] || null,
-          label1: sortedImages[i]?.label || '',
-          label2: sortedImages[i + 1]?.label || ''
+      for (let i = 0; i < rest.length; i += 2) {
+        imagePages.push({
+          img1: rest[i] || null,
+          img2: rest[i + 1] || null
         });
       }
 
@@ -113,7 +114,7 @@ export class ExportService {
         })),
         firstImage,
         hasFirstImage: !!firstImage,
-        imagePages: otherImages
+        imagePages,
       };
 
       // 6. Render
@@ -126,7 +127,7 @@ export class ExportService {
       });
 
       const fileName = `Informe_Tecnico_${report.vehicle?.licensePlate || 'SIN_PLACA'}_${this.formatDate(report.client?.date)}.docx`;
-      saveAs(output, fileName);
+      this.saveAndShare(output, fileName, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
 
     } catch (error) {
       console.error('Error generando Word:', error);
@@ -264,69 +265,54 @@ export class ExportService {
         }
 
         if (i === 0) {
-          // Primera imagen → página completa
+          // Página completa: solo la primera
           page = pdfDoc.addPage([pageWidth, pageHeight]);
 
-          if (img.label) {
-            page.drawText(img.label.toUpperCase(), {
-              x: margin,
-              y: pageHeight - 40,
-              size: 14,
-              font: fontBold,
-              color: rgb(0.1, 0.1, 0.1)
-            });
-          }
-
-          const maxW = pageWidth - margin * 2;
-          const maxH = pageHeight - 100;
-          const scale = Math.min(maxW / embedded.width, maxH / embedded.height);
+          const maxW = pageWidth - margin * 2;      // 515
+          const maxH = pageHeight - 120;            // ~722
+          const scale = Math.min(maxW / embedded.width, maxH / embedded.height, 1);
           const w = embedded.width * scale;
           const h = embedded.height * scale;
 
           page.drawImage(embedded, {
             x: (pageWidth - w) / 2,
-            y: (pageHeight - h) / 2 - 10,
+            y: (pageHeight - h) / 2,
             width: w,
             height: h
           });
-        } else {
-          // Máximo 2 imágenes por página
-          const pos = (i - 1) % 2;
-
-          if (pos === 0) {
-            page = pdfDoc.addPage([pageWidth, pageHeight]);
-          }
-
-          const maxW = pageWidth - margin * 2;
-          const maxH = 340;
-          const scale = Math.min(maxW / embedded.width, maxH / embedded.height);
-          const w = embedded.width * scale;
-          const h = embedded.height * scale;
-          const yPos = pos === 0 ? pageHeight - 60 - h : 60;
-
-          page.drawImage(embedded, {
-            x: (pageWidth - w) / 2,
-            y: yPos,
-            width: w,
-            height: h
-          });
-
-          if (img.label) {
-            page.drawText(img.label, {
-              x: margin,
-              y: yPos - 16,
-              size: 9,
-              font,
-              color: rgb(0.3, 0.3, 0.3)
-            });
-          }
+          continue;
         }
+
+        // Resto: índice 1,2,3,4... → pares de 2
+        const restIndex = i - 1;          // 0,1,2,3...
+        const posInPage = restIndex % 2;  // 0 arriba, 1 abajo
+
+        if (posInPage === 0) {
+          page = pdfDoc.addPage([pageWidth, pageHeight]);
+        }
+
+        const maxW = pageWidth - margin * 2;
+        const maxH = 320; // para que quepan 2
+        const scale = Math.min(maxW / embedded.width, maxH / embedded.height, 1);
+        const w = embedded.width * scale;
+        const h = embedded.height * scale;
+
+        const yTop = pageHeight - 50 - h;
+        const yBottom = 50;
+        const yPos = posInPage === 0 ? yTop : yBottom;
+
+        page.drawImage(embedded, {
+          x: (pageWidth - w) / 2,
+          y: yPos,
+          width: w,
+          height: h
+        });
       }
 
       const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const fileName = `Informe_Tecnico_${report.vehicle?.licensePlate || 'SIN_PLACA'}_${this.formatDate(report.client?.date)}.pdf`;
-      saveAs(blob, fileName);
+      await this.saveAndShare(blob, fileName, 'application/pdf');
 
     } catch (error) {
       console.error('Error generando PDF:', error);
@@ -335,7 +321,52 @@ export class ExportService {
     }
   }
 
+  private async saveAndShare(blob: Blob, fileName: string, mimeType: string) {
+    if (!Capacitor.isNativePlatform()) {
+      const { saveAs } = await import('file-saver');
+      const save = (saveAs as any).saveAs || (saveAs as any).default || saveAs;
+      save(blob, fileName);
+      return;
+    }
+
+    const base64 = await this.blobToBase64(blob);
+
+    const saved = await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Cache,
+      recursive: true,
+    });
+
+    await Share.share({
+      title: fileName,
+      url: saved.uri,
+      dialogTitle: 'Compartir o guardar documento'
+    });
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   // ===================== HELPERS =====================
+
+  private getTemplateUrl(): string {
+    if (Capacitor.isNativePlatform()) {
+      return Capacitor.convertFileSrc('assets/templates/informe-tecnico-template.docx');
+      // si falla, prueba:
+      // return 'assets/templates/informe-tecnico-template.docx';
+    }
+    return 'assets/templates/informe-tecnico-template.docx';
+  }
 
   private formatDate(date: any): string {
     if (!date) return '';
@@ -343,7 +374,7 @@ export class ExportService {
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day}-${month}-${year}`;
   }
 
   private fileToBase64(file: File): Promise<string> {
@@ -432,3 +463,6 @@ export class ExportService {
 
 // Necesario para el helper de PDF (rgb se usa en métodos privados)
 import { rgb } from 'pdf-lib';
+import {Directory, Filesystem} from '@capacitor/filesystem';
+import {Share} from '@capacitor/share';
+import {Capacitor} from '@capacitor/core';

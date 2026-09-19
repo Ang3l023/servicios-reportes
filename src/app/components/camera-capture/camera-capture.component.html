@@ -15,7 +15,7 @@
         <div class="text-center text-white p-6">
           <mat-icon class="text-5xl mb-3 opacity-70">photo_camera</mat-icon>
           <p class="mb-4">Accede a la cámara para tomar una foto</p>
-          <button mat-raised-button color="primary" (click)="openCamera()">
+          <button mat-raised-button color="primary" (click)="onTakePhoto()">
             Abrir cámara
           </button>
           @if (errorMessage) {
@@ -31,7 +31,7 @@
     @if (isCameraOpen) {
       <div class="p-4 flex justify-center gap-4 bg-slate-100">
         <button mat-stroked-button (click)="close()">Cancelar</button>
-        <button mat-raised-button color="primary" (click)="capture()">
+        <button mat-raised-button color="primary" (click)="onPickGallery()">
           <mat-icon>camera</mat-icon>
           Capturar
         </button>

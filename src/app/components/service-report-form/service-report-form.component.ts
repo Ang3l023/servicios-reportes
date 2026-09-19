@@ -1,5 +1,5 @@
 import {Component, HostListener, OnInit} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +17,10 @@ import { ExportService } from '../../services/export.service';
 import { ManageImagesComponent } from '../manage-images/manage-images.component';
 import { CameraCaptureComponent } from '../camera-capture/camera-capture.component';
 import { ServiceReport, Severity } from '../../models/service-report.model';
+import {CameraNativeService} from '../../services/camera-native.service';
+import {Capacitor} from '@capacitor/core';
+import {App} from '@capacitor/app';
+import {ShareReceiverService} from '../../services/share-receiver.service';
 
 @Component({
   selector: 'app-service-report-form',
@@ -34,7 +38,7 @@ import { ServiceReport, Severity } from '../../models/service-report.model';
     MatDialogModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    CameraCaptureComponent
+    CameraCaptureComponent,
   ],
   templateUrl: './service-report-form.component.html',
   styleUrl: './service-report-form.component.scss'
@@ -50,7 +54,9 @@ export class ServiceReportFormComponent implements OnInit {
     private fb: FormBuilder,
     private breakpointObserver: BreakpointObserver,
     private imageService: ImageService,
+    private shareReceiver: ShareReceiverService,
     private exportService: ExportService,
+    private cameraNative: CameraNativeService,
     private dialog: MatDialog
   ) {}
 
@@ -58,7 +64,50 @@ export class ServiceReportFormComponent implements OnInit {
     this.buildForm();
     this.breakpointObserver.observe([Breakpoints.Handset])
       .subscribe(result => this.isMobile = result.matches);
-    // await this.loadSharedImagesFromCache();
+    this.shareReceiver.init();
+  }
+
+  private setupShareListener() {
+    if (!Capacitor.isNativePlatform()) return;
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        console.log('App activa – lista para recibir shares si el intent los entregó');
+      }
+    });
+  }
+
+  async onTakePhoto() {
+    try {
+      await this.cameraNative.takePhoto('Foto tomada');
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || 'No se pudo abrir la cámara. Revisa los permisos.');
+    }
+  }
+
+  async onPickGallery() {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await this.cameraNative.pickFromGallery('Desde galería');
+      } else {
+        // input file web
+        document.getElementById('fileInput')?.click();
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || 'No se pudo abrir la galería');
+    }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    Array.from(input.files).forEach((file, i) => {
+      this.imageService.addImage(file, `Imagen ${i + 1}`);
+    });
+    input.value = '';
   }
 
   private buildForm() {
@@ -197,20 +246,6 @@ export class ServiceReportFormComponent implements OnInit {
     this.showCamera = false;
   }
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-
-    // FileList mantiene el orden de selección
-    const files = Array.from(input.files);
-
-    files.forEach((file, index) => {
-      this.imageService.addImage(file, `Imagen ${index + 1}`);
-    });
-
-    input.value = '';
-  }
-
   get images() {
     return this.imageService.getSnapshot();
   }
@@ -226,25 +261,34 @@ export class ServiceReportFormComponent implements OnInit {
 
   // ===== Export =====
   async export(format: 'word' | 'pdf') {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    console.log('EXPORT CLICK', format);
+    alert('Exportar ' + format);
 
-    const report: ServiceReport = {
-      client: this.form.value.client,
-      vehicle: this.form.value.vehicle,
-      issues: this.form.value.issues.map((item: any, i: number) => ({ id: i + 1, ...item })),
-      works: this.form.value.works.map((item: any, i: number) => ({ id: i + 1, ...item })),
-      recommendations: this.form.value.recommendations.map((item: any, i: number) => ({ id: i + 1, ...item })),
-      observations: this.form.value.observations.map((item: any, i: number) => ({ id: i + 1, ...item })),
-      images: this.imageService.getSnapshot()
-    };
+    try {
+      const formValue = this.form.getRawValue();
 
-    if (format === 'word') {
-      await this.exportService.exportToWord(report);
-    } else {
-      await this.exportService.exportToPdf(report);
+      const report = {
+        client: formValue.client,
+        vehicle: formValue.vehicle,
+        issues: formValue.issues || [],
+        works: formValue.works || [],
+        recommendations: formValue.recommendations || [],
+        observations: formValue.observations || [],
+        images: this.imageService.getSnapshot()
+      };
+
+      console.log('REPORT', report);
+
+      if (format === 'word') {
+        await this.exportService.exportToWord(report);
+      } else {
+        await this.exportService.exportToPdf(report);
+      }
+
+      alert('Documento generado');
+    } catch (e) {
+      console.error('EXPORT ERROR', e);
+      alert('Error exportando: ' + ((e as any)?.message || e));
     }
   }
 
