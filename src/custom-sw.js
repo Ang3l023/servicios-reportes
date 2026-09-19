@@ -35,11 +35,11 @@ async function saveFilesToIndexedDB(files) {
   });
 }
 
-// Interceptamos la petición POST para evitar que llegue al servidor Vercel (Error 405)
+// Interceptamos la petición POST para procesar las imágenes localmente
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (event.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
+  if (event.request.method === 'POST' && url.pathname.includes('/api/share-target')) {
     event.respondWith(
       (async () => {
         try {
@@ -56,10 +56,10 @@ self.addEventListener('fetch', (event) => {
             await saveFilesToIndexedDB(files);
           }
         } catch (err) {
-          console.error('Error procesando archivos en SW:', err);
+          console.error('Error al procesar imágenes en Service Worker:', err);
         }
 
-        // Redirigimos usando un GET 303 que Vercel sí acepta para las rutas de Angular
+        // Si el Service Worker falla o completa, la peticion redirige a la ruta Angular en GET
         return Response.redirect('/share-target?fromShare=true', 303);
       })()
     );
