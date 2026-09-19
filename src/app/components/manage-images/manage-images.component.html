@@ -1,0 +1,135 @@
+<div class="p-0 max-w-4xl w-full">
+  <!-- Header -->
+  <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
+    <div>
+      <h2 class="text-lg font-semibold">Gestionar imágenes</h2>
+      <p class="text-sm text-slate-300">Arrastra y suelta las imágenes para cambiar el orden</p>
+    </div>
+    <button mat-icon-button (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="p-6">
+    <!-- Add buttons -->
+    <div class="flex flex-wrap gap-3 mb-6">
+      <button mat-stroked-button color="primary" (click)="fileInput.click()">
+        <mat-icon>add_photo_alternate</mat-icon>
+        Agregar imágenes
+      </button>
+      <input #fileInput type="file" accept="image/*" multiple hidden (change)="onFileSelected($event)">
+
+      <span class="text-sm text-slate-500 self-center">
+        Formatos: JPG, PNG (Máx. 10 MB)
+      </span>
+    </div>
+
+    <!-- Current order list (left) + Grid (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Order list -->
+      <!-- Orden actual -->
+      <div class="lg:col-span-1">
+        <h3 class="font-medium text-slate-700 mb-3">Orden actual</h3>
+
+        <div
+          cdkDropList
+          [cdkDropListData]="images"
+          (cdkDropListDropped)="drop($event)"
+          class="images-list space-y-2 min-h-[100px]">
+
+          @for (img of images; track img.id; let i = $index) {
+            <div
+              cdkDrag
+              class="image-item flex items-center gap-2 p-3 bg-white border border-slate-200
+             rounded-xl hover:bg-slate-50 shadow-sm"
+              [class.reordering]="isReordering">
+
+              <!-- Handle -->
+              <div class="text-slate-400 cursor-grab active:cursor-grabbing flex-shrink-0" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
+              </div>
+
+              <!-- Miniatura -->
+              <img [src]="img.previewUrl"
+                   class="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                   alt="preview">
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">
+                  {{ img.label || 'Sin etiqueta' }}
+                </p>
+                <p class="text-xs text-slate-500">
+                  #{{ img.order }} · {{ img.sizeKB }} KB
+                </p>
+              </div>
+
+              <!-- Botones subir / bajar -->
+              <div class="flex flex-col">
+                <button mat-icon-button type="button" class="!w-8 !h-8"
+                        [disabled]="i === 0 || isReordering"
+                        (click)="moveUp(i)">
+                  <mat-icon class="!text-xl">keyboard_arrow_up</mat-icon>
+                </button>
+                <button mat-icon-button type="button" class="!w-8 !h-8"
+                        [disabled]="i === images.length - 1 || isReordering"
+                        (click)="moveDown(i)">
+                  <mat-icon class="!text-xl">keyboard_arrow_down</mat-icon>
+                </button>
+              </div>
+
+              <!-- Eliminar -->
+              <button mat-icon-button color="warn" type="button" class="!w-9 !h-9"
+                      [disabled]="isReordering"
+                      (click)="remove(img.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+
+              <div *cdkDragPlaceholder
+                   class="h-16 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300">
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Image grid -->
+      <div class="lg:col-span-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          @for (img of images; track img.id) {
+            <div class="relative group rounded-lg overflow-hidden border border-slate-200 bg-white shadow-sm">
+              <img [src]="img.previewUrl" class="w-full aspect-square object-cover" />
+              <div class="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                {{ img.order }}
+              </div>
+              <button
+                mat-icon-button
+                class="absolute top-1 right-1 bg-black/50 text-white opacity-0 group-hover:opacity-100 transition"
+                (click)="remove(img.id)">
+                <mat-icon>close</mat-icon>
+              </button>
+              <div class="p-2 text-center">
+                <p class="text-xs font-medium truncate">{{ img.label }}</p>
+                <p class="text-xs text-slate-500">{{ img.sizeKB }} KB</p>
+              </div>
+            </div>
+          } @empty {
+            <div class="col-span-full text-center py-12 text-slate-400">
+              <mat-icon class="text-5xl mb-2">image</mat-icon>
+              <p>No hay imágenes todavía</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3 rounded-b-xl">
+    <button mat-stroked-button (click)="cancel()">Cancelar</button>
+    <button mat-raised-button color="primary" (click)="save()">
+      Guardar cambios
+    </button>
+  </div>
+</div>

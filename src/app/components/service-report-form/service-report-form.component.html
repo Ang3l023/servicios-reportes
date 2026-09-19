@@ -1,0 +1,780 @@
+<div class="min-h-screen bg-slate-100">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="bg-slate-800 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+        <mat-icon class="text-2xl sm:text-3xl flex-shrink-0">directions_car</mat-icon>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-semibold leading-tight truncate">Reporte de Servicio</h1>
+          <p class="text-[11px] sm:text-xs text-slate-300 hidden xs:block sm:block truncate">
+            Registro de inspección y mantenimiento de vehículos
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 text-sm flex-shrink-0">
+        <mat-icon class="text-xl sm:text-2xl">account_circle</mat-icon>
+        <span class="hidden sm:inline">Usuario</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== DESKTOP VIEW ===================== -->
+  <div class="hidden md:block max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-800">Nuevo Reporte</h2>
+        <p class="text-sm text-slate-500">Completa la información del cliente, vehículo, inconvenientes y trabajos realizados.</p>
+      </div>
+      <div class="text-sm text-slate-500">
+        Fecha del sistema: {{ form.get('client.date')?.value | date:'dd MMM yyyy' }}
+      </div>
+    </div>
+
+    <form [formGroup]="form" class="space-y-6">
+
+      <!-- ===== CLIENT DATA ===== -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+        <div class="bg-slate-700 text-white px-5 py-3 flex items-center gap-2">
+          <mat-icon class="text-xl">person</mat-icon>
+          <span class="font-medium">Datos del cliente</span>
+        </div>
+
+        <div class="p-5 space-y-5" formGroupName="client">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <div class="form-group">
+              <label class="form-label">Nombre de la empresa <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.companyName')?.invalid && form.get('client.companyName')?.touched">
+                <mat-icon class="input-icon">business</mat-icon>
+                <input formControlName="companyName" class="form-input" placeholder="ABC Solutions S.A.C.">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Teléfono <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">phone</mat-icon>
+                <input formControlName="phone" class="form-input" placeholder="Ej: 01 234 5678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Celular <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">smartphone</mat-icon>
+                <input formControlName="mobile" class="form-input" placeholder="Ej: 987 654 321">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <div class="form-group">
+              <label class="form-label">Dirección <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.address')?.invalid && form.get('client.address')?.touched">
+                <mat-icon class="input-icon">location_on</mat-icon>
+                <input formControlName="address" class="form-input" placeholder="Av. Principal 123, Lima">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Correo <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">email</mat-icon>
+                <input formControlName="email" class="form-input" placeholder="ejemplo@empresa.com">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fecha <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.date')?.invalid && form.get('client.date')?.touched">
+                <mat-icon class="input-icon">calendar_today</mat-icon>
+                <input matInput [matDatepicker]="picker" formControlName="date" class="form-input" placeholder="dd/mm/yyyy">
+                <mat-datepicker-toggle matIconSuffix [for]="picker" class="datepicker-toggle"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== VEHICLE DATA ===== -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+        <div class="bg-slate-700 text-white px-5 py-3 flex items-center gap-2">
+          <mat-icon class="text-xl">directions_car</mat-icon>
+          <span class="font-medium">Datos del vehículo</span>
+        </div>
+
+        <div class="p-5" formGroupName="vehicle">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+            <div class="form-group">
+              <label class="form-label">Horómetro <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.hourMeter')?.invalid && form.get('vehicle.hourMeter')?.touched">
+                <mat-icon class="input-icon">speed</mat-icon>
+                <input formControlName="hourMeter" class="form-input" placeholder="12540">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Kilometraje <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.mileage')?.invalid && form.get('vehicle.mileage')?.touched">
+                <mat-icon class="input-icon">speed</mat-icon>
+                <input formControlName="mileage" class="form-input" placeholder="45230">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Marca <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.brand')?.invalid && form.get('vehicle.brand')?.touched">
+                <mat-icon class="input-icon">directions_car</mat-icon>
+                <input formControlName="brand" class="form-input" placeholder="Toyota">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Modelo <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.model')?.invalid && form.get('vehicle.model')?.touched">
+                <mat-icon class="input-icon">directions_car</mat-icon>
+                <input formControlName="model" class="form-input" placeholder="Hilux">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Placa de rodaje <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.licensePlate')?.invalid && form.get('vehicle.licensePlate')?.touched">
+                <mat-icon class="input-icon">pin</mat-icon>
+                <input formControlName="licensePlate" class="form-input" placeholder="ABC-123">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ISSUES + WORKS ===== -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+
+        <!-- Issues -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+          <div class="bg-slate-700 text-white px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-xl">warning</mat-icon>
+              <span class="font-medium">Inconvenientes encontrados</span>
+            </div>
+            <button type="button"
+                    class="bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-1.5 rounded-full border border-white/30 transition"
+                    (click)="addIssue()">
+              + Agregar
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4" formArrayName="issues">
+            @for (ctrl of issues.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="flex gap-3 items-end">
+                <span class="text-sm font-medium text-slate-500 w-5 mb-3">{{ i + 1 }}</span>
+
+                <div class="form-group flex-1">
+                  <label class="form-label">Inconveniente <span class="required">*</span></label>
+                  <div class="input-with-icon" [class.invalid]="ctrl.get('description')?.invalid && ctrl.get('description')?.touched">
+                    <mat-icon class="input-icon">report_problem</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Describe el inconveniente">
+                  </div>
+                </div>
+
+                <div class="form-group w-40">
+                  <label class="form-label">Estado <span class="required">*</span></label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">flag</mat-icon>
+                    <select formControlName="severity" class="form-input appearance-none">
+                      @for (opt of severityOptions; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <button type="button" mat-icon-button color="warn" (click)="removeIssue(i)" class="!mb-1">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+
+            @if (issues.length === 0) {
+              <p class="text-sm text-slate-400 text-center py-6">Debe agregar como mínimo 1 inconveniente.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Works -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+          <div class="bg-slate-700 text-white px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-xl">build</mat-icon>
+              <span class="font-medium">Trabajos efectuados</span>
+            </div>
+            <button type="button"
+                    class="bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-1.5 rounded-full border border-white/30 transition"
+                    (click)="addWork()">
+              + Agregar
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4" formArrayName="works">
+            @for (ctrl of works.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="flex gap-3 items-end">
+                <span class="text-sm font-medium text-slate-500 w-5 mb-3">{{ i + 1 }}</span>
+
+                <div class="form-group flex-1">
+                  <label class="form-label">Trabajo realizado <span class="required">*</span></label>
+                  <div class="input-with-icon" [class.invalid]="ctrl.get('description')?.invalid && ctrl.get('description')?.touched">
+                    <mat-icon class="input-icon">handyman</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Describe el trabajo realizado">
+                  </div>
+                </div>
+
+                <button type="button" mat-icon-button color="warn" (click)="removeWork(i)" class="!mb-1">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+
+            @if (works.length === 0) {
+              <p class="text-sm text-slate-400 text-center py-6">Debe agregar como mínimo 1 trabajo.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RECOMMENDATIONS + OBSERVATIONS ===== -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+
+        <!-- Recommendations -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+          <div class="bg-slate-700 text-white px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-xl">lightbulb</mat-icon>
+              <span class="font-medium">Recomendaciones técnicas</span>
+            </div>
+            <button type="button"
+                    class="bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-1.5 rounded-full border border-white/30 transition"
+                    (click)="addRecommendation()">
+              + Agregar
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4" formArrayName="recommendations">
+            @for (ctrl of recommendations.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="flex gap-3 items-end">
+                <span class="text-sm font-medium text-slate-500 w-5 mb-3">{{ i + 1 }}</span>
+
+                <div class="form-group flex-1">
+                  <label class="form-label">Recomendación</label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">tips_and_updates</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Escribe una recomendación">
+                  </div>
+                </div>
+
+                <button type="button" mat-icon-button color="warn" (click)="removeRecommendation(i)" class="!mb-1">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Observations -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+          <div class="bg-slate-700 text-white px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-xl">notes</mat-icon>
+              <span class="font-medium">Observaciones</span>
+            </div>
+            <button type="button"
+                    class="bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-1.5 rounded-full border border-white/30 transition"
+                    (click)="addObservation()">
+              + Agregar
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4" formArrayName="observations">
+            @for (ctrl of observations.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="flex gap-3 items-end">
+                <span class="text-sm font-medium text-slate-500 w-5 mb-3">{{ i + 1 }}</span>
+
+                <div class="form-group flex-1">
+                  <label class="form-label">Observación</label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">comment</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Escribe una observación">
+                  </div>
+                </div>
+
+                <button type="button" mat-icon-button color="warn" (click)="removeObservation(i)" class="!mb-1">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== IMAGES ===== -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+        <div class="bg-slate-700 text-white px-5 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-xl">photo_library</mat-icon>
+            <span class="font-medium">Imágenes</span>
+          </div>
+          <button type="button"
+                  class="bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-1.5 rounded-full border border-white/30 transition"
+                  (click)="openManageImages()">
+            Gestionar imágenes
+          </button>
+        </div>
+
+        <div class="p-5">
+          <div class="flex flex-wrap gap-3 mb-5">
+            <button type="button"
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition"
+                    (click)="openCamera()">
+              <mat-icon class="!text-xl text-slate-500">photo_camera</mat-icon>
+              Tomar foto
+            </button>
+
+            <button type="button"
+                    class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition"
+                    (click)="fileInput.click()">
+              <mat-icon class="!text-xl text-slate-500">upload</mat-icon>
+              Adjuntar imágenes
+            </button>
+            <input #fileInput type="file" accept="image/*" multiple hidden (change)="onFileSelected($event)">
+          </div>
+
+          <div class="flex flex-wrap gap-4">
+            @for (img of images; track img.id) {
+              <div class="relative group w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+                <img [src]="img.previewUrl" class="w-full h-full object-cover">
+                <div class="absolute top-2 left-2 bg-slate-800/80 text-white text-xs font-medium px-2 py-0.5 rounded-md">
+                  {{ img.order }}
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                  <p class="text-white text-xs truncate">{{ img.label || 'Sin etiqueta' }}</p>
+                </div>
+              </div>
+            } @empty {
+              <div class="w-full py-10 text-center text-slate-400">
+                <mat-icon class="text-5xl mb-2 opacity-50">image</mat-icon>
+                <p class="text-sm">Debe agregar imágenes para completar el reporte.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ACTIONS ===== -->
+      <div class="flex justify-between items-center pt-2">
+        <button mat-stroked-button type="button">Cancelar</button>
+        <div class="flex gap-3">
+          <button mat-raised-button color="primary" type="button" (click)="export('word')">
+            <mat-icon>description</mat-icon>
+            Exportar como Word
+          </button>
+          <button mat-raised-button color="accent" type="button" (click)="export('pdf')">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Exportar como PDF
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===================== MOBILE VIEW ===================== -->
+  <div class="md:hidden">
+
+    <!-- Step Header -->
+    <div class="bg-slate-800 text-white px-3 sm:px-4 py-2.5 sm:py-3.5 sticky top-[48px] sm:top-[52px] z-30">
+      <p class="text-[11px] sm:text-xs text-slate-300 mb-0.5">Paso {{ currentStep + 1 }} de 7</p>
+      <h2 class="font-medium text-sm sm:text-base leading-tight">
+        @switch (currentStep) {
+          @case (0) { Datos del cliente }
+          @case (1) { Datos del vehículo }
+          @case (2) { Inconvenientes encontrados }
+          @case (3) { Trabajos efectuados }
+          @case (4) { Recomendaciones técnicas }
+          @case (5) { Observaciones }
+          @case (6) { Imágenes }
+        }
+      </h2>
+    </div>
+
+    <div class="p-3 sm:p-4 pb-28 sm:pb-32">
+      <form [formGroup]="form">
+
+        <!-- STEP 0: CLIENT -->
+        @if (currentStep === 0) {
+          <div formGroupName="client" class="space-y-5">
+            <div class="form-group">
+              <label class="form-label">Nombre de la empresa <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.companyName')?.invalid && form.get('client.companyName')?.touched">
+                <mat-icon class="input-icon">business</mat-icon>
+                <input formControlName="companyName" class="form-input" placeholder="ABC Solutions S.A.C.">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Dirección <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.address')?.invalid && form.get('client.address')?.touched">
+                <mat-icon class="input-icon">location_on</mat-icon>
+                <input formControlName="address" class="form-input" placeholder="Av. Principal 123, Lima">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Teléfono <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">phone</mat-icon>
+                <input formControlName="phone" class="form-input" placeholder="Ej: 01 234 5678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Celular <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">smartphone</mat-icon>
+                <input formControlName="mobile" class="form-input" placeholder="Ej: 987 654 321">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Correo <span class="optional">(opcional)</span></label>
+              <div class="input-with-icon">
+                <mat-icon class="input-icon">email</mat-icon>
+                <input formControlName="email" class="form-input" placeholder="ejemplo@empresa.com">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fecha <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('client.date')?.invalid && form.get('client.date')?.touched">
+                <mat-icon class="input-icon">calendar_today</mat-icon>
+                <input matInput [matDatepicker]="pickerMobile" formControlName="date" class="form-input">
+                <mat-datepicker-toggle matIconSuffix [for]="pickerMobile" class="datepicker-toggle"></mat-datepicker-toggle>
+                <mat-datepicker #pickerMobile></mat-datepicker>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- STEP 1: VEHICLE -->
+        @if (currentStep === 1) {
+          <div formGroupName="vehicle" class="space-y-5">
+            <div class="form-group">
+              <label class="form-label">Horómetro <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.hourMeter')?.invalid && form.get('vehicle.hourMeter')?.touched">
+                <mat-icon class="input-icon">speed</mat-icon>
+                <input formControlName="hourMeter" class="form-input" placeholder="12540">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Kilometraje <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.mileage')?.invalid && form.get('vehicle.mileage')?.touched">
+                <mat-icon class="input-icon">speed</mat-icon>
+                <input formControlName="mileage" class="form-input" placeholder="45230">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Marca <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.brand')?.invalid && form.get('vehicle.brand')?.touched">
+                <mat-icon class="input-icon">directions_car</mat-icon>
+                <input formControlName="brand" class="form-input" placeholder="Toyota">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Modelo <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.model')?.invalid && form.get('vehicle.model')?.touched">
+                <mat-icon class="input-icon">directions_car</mat-icon>
+                <input formControlName="model" class="form-input" placeholder="Hilux">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Placa de rodaje <span class="required">*</span></label>
+              <div class="input-with-icon" [class.invalid]="form.get('vehicle.licensePlate')?.invalid && form.get('vehicle.licensePlate')?.touched">
+                <mat-icon class="input-icon">pin</mat-icon>
+                <input formControlName="licensePlate" class="form-input" placeholder="ABC-123">
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- STEP 2: ISSUES -->
+        @if (currentStep === 2) {
+          <div formArrayName="issues" class="space-y-5">
+            <!-- Floating Action Button -->
+            @if (currentStep >= 2 && currentStep <= 5) {
+              <button type="button"
+                      class="fixed bottom-[4.5rem] right-3 sm:right-4 z-40
+                 w-12 h-12 sm:w-14 sm:h-14
+                 rounded-full bg-slate-800 text-white shadow-lg
+                 flex items-center justify-center
+                 active:scale-95 transition-transform"
+                      (click)="onAddItem()">
+                <mat-icon class="!text-[26px] sm:!text-[28px] !w-[26px] sm:!w-[28px] !h-[26px] sm:!h-[28px] !leading-none">
+                  add
+                </mat-icon>
+              </button>
+            }
+
+            @for (ctrl of issues.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold text-slate-600">#{{ i + 1 }}</span>
+                  <button type="button" mat-icon-button color="warn" (click)="removeIssue(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Inconveniente <span class="required">*</span></label>
+                  <div class="input-with-icon" [class.invalid]="ctrl.get('description')?.invalid && ctrl.get('description')?.touched">
+                    <mat-icon class="input-icon">report_problem</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Describe el inconveniente">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Estado <span class="required">*</span></label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">flag</mat-icon>
+                    <select formControlName="severity" class="form-input appearance-none">
+                      @for (opt of severityOptions; track opt) {
+                        <option [value]="opt">{{ opt }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- STEP 3: WORKS -->
+        @if (currentStep === 3) {
+          <div formArrayName="works" class="space-y-5">
+            <!-- Floating Action Button -->
+            @if (currentStep >= 2 && currentStep <= 5) {
+              <button type="button"
+                      class="fixed bottom-[4.5rem] right-3 sm:right-4 z-40
+                 w-12 h-12 sm:w-14 sm:h-14
+                 rounded-full bg-slate-800 text-white shadow-lg
+                 flex items-center justify-center
+                 active:scale-95 transition-transform"
+                      (click)="onAddItem()">
+                <mat-icon class="!text-[26px] sm:!text-[28px] !w-[26px] sm:!w-[28px] !h-[26px] sm:!h-[28px] !leading-none">
+                  add
+                </mat-icon>
+              </button>
+            }
+
+            @for (ctrl of works.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold text-slate-600">#{{ i + 1 }}</span>
+                  <button type="button" mat-icon-button color="warn" (click)="removeWork(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Trabajo realizado <span class="required">*</span></label>
+                  <div class="input-with-icon" [class.invalid]="ctrl.get('description')?.invalid && ctrl.get('description')?.touched">
+                    <mat-icon class="input-icon">handyman</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Describe el trabajo">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- STEP 4: RECOMMENDATIONS -->
+        @if (currentStep === 4) {
+          <div formArrayName="recommendations" class="space-y-5">
+            <!-- Floating Action Button -->
+            @if (currentStep >= 2 && currentStep <= 5) {
+              <button type="button"
+                      class="fixed bottom-[4.5rem] right-3 sm:right-4 z-40
+                 w-12 h-12 sm:w-14 sm:h-14
+                 rounded-full bg-slate-800 text-white shadow-lg
+                 flex items-center justify-center
+                 active:scale-95 transition-transform"
+                      (click)="onAddItem()">
+                <mat-icon class="!text-[26px] sm:!text-[28px] !w-[26px] sm:!w-[28px] !h-[26px] sm:!h-[28px] !leading-none">
+                  add
+                </mat-icon>
+              </button>
+            }
+
+            @for (ctrl of recommendations.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold text-slate-600">#{{ i + 1 }}</span>
+                  <button type="button" mat-icon-button color="warn" (click)="removeRecommendation(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Recomendación</label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">tips_and_updates</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Escribe una recomendación">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- STEP 5: OBSERVATIONS -->
+        @if (currentStep === 5) {
+          <div formArrayName="observations" class="space-y-5">
+            <!-- Floating Action Button -->
+            @if (currentStep >= 2 && currentStep <= 5) {
+              <button type="button"
+                      class="fixed bottom-[4.5rem] right-3 sm:right-4 z-40
+                 w-12 h-12 sm:w-14 sm:h-14
+                 rounded-full bg-slate-800 text-white shadow-lg
+                 flex items-center justify-center
+                 active:scale-95 transition-transform"
+                      (click)="onAddItem()">
+                <mat-icon class="!text-[26px] sm:!text-[28px] !w-[26px] sm:!w-[28px] !h-[26px] sm:!h-[28px] !leading-none">
+                  add
+                </mat-icon>
+              </button>
+            }
+
+            @for (ctrl of observations.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold text-slate-600">#{{ i + 1 }}</span>
+                  <button type="button" mat-icon-button color="warn" (click)="removeObservation(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Observación</label>
+                  <div class="input-with-icon">
+                    <mat-icon class="input-icon">comment</mat-icon>
+                    <input formControlName="description" class="form-input" placeholder="Escribe una observación">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- STEP 6: IMAGES -->
+        @if (currentStep === 6) {
+          <div class="space-y-5">
+            <div class="flex flex-wrap gap-3">
+              <button type="button"
+                      class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium"
+                      (click)="openCamera()">
+                <mat-icon class="!text-xl text-slate-500">photo_camera</mat-icon>
+                Tomar foto
+              </button>
+
+              <button type="button"
+                      class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium"
+                      (click)="fileInputMobile.click()">
+                <mat-icon class="!text-xl text-slate-500">upload</mat-icon>
+                Agregar
+              </button>
+
+              <button type="button"
+                      class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-medium"
+                      (click)="openManageImages()">
+                <mat-icon class="!text-xl text-slate-500">tune</mat-icon>
+                Gestionar
+              </button>
+
+              <input #fileInputMobile type="file" accept="image/*" multiple hidden (change)="onFileSelected($event)">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              @for (img of images; track img.id) {
+                <div class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 aspect-square">
+                  <img [src]="img.previewUrl" class="w-full h-full object-cover">
+                  <div class="absolute top-2 left-2 bg-slate-800/80 text-white text-xs font-medium px-2 py-0.5 rounded-md">
+                    {{ img.order }}
+                  </div>
+                </div>
+              } @empty {
+                <div class="col-span-2 py-12 text-center text-slate-400">
+                  <mat-icon class="text-5xl mb-2 opacity-50">image</mat-icon>
+                  <p class="text-sm">No hay imágenes todavía</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </form>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200
+            px-3 sm:px-4 py-2.5 sm:py-3
+            flex justify-between items-center gap-2 sm:gap-3
+            z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]
+            safe-area-bottom">
+
+      <button type="button"
+              class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border border-slate-300
+                 text-slate-700 text-sm font-medium disabled:opacity-40
+                 min-w-[90px] sm:min-w-[100px]"
+              [disabled]="currentStep === 0"
+              (click)="prevStep()">
+        Anterior
+      </button>
+
+      @if (currentStep < 6) {
+        <button type="button"
+                class="px-5 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-slate-800
+                   text-white text-sm font-medium min-w-[90px] sm:min-w-[100px]"
+                (click)="nextStep()">
+          Siguiente
+        </button>
+      } @else {
+        <div class="flex gap-2">
+          <button type="button"
+                  class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-blue-600
+                     text-white text-sm font-medium"
+                  (click)="export('word')">
+            Word
+          </button>
+          <button type="button"
+                  class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-red-600
+                     text-white text-sm font-medium"
+                  (click)="export('pdf')">
+            PDF
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Camera Overlay -->
+  @if (showCamera) {
+    <app-camera-capture
+      (photoTaken)="onPhotoTaken($event)"
+      (closed)="showCamera = false">
+    </app-camera-capture>
+  }
+
+</div>

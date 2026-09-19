@@ -1,0 +1,147 @@
+:host {
+  display: block;
+}
+
+/* ========== Form Group ========== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.flex-1 {
+    min-width: 0;
+  }
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  margin-left: 2px;
+
+  .required {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  .optional {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+}
+
+/* ========== Input with Icon ========== */
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0 12px;
+  min-height: 42px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+
+  &:hover {
+    border-color: #94a3b8;
+  }
+
+  &:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+
+  &.invalid {
+    border-color: #ef4444;
+
+    .input-icon {
+      color: #ef4444;
+    }
+  }
+}
+
+.input-icon {
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: #64748b;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.form-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #1e293b;
+  padding: 10px 0;
+  min-width: 0;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+}
+
+/* Select arrow */
+.input-with-icon select.form-input {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+  background-size: 16px;
+  padding-right: 20px;
+  appearance: none;
+}
+
+/* Datepicker toggle */
+.datepicker-toggle {
+  margin-left: 4px;
+
+  ::ng-deep .mat-mdc-icon-button {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 5px !important;
+  }
+}
+
+/* Section header color */
+.bg-slate-700 {
+  background-color: #1e293b;
+}
+
+/* Mejor soporte de safe-area en iPhone */
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Evitar que los inputs se vean muy pequeños en pantallas muy angostas */
+@media (max-width: 374px) {
+  .form-input {
+    font-size: 13px;
+  }
+
+  .form-label {
+    font-size: 12px;
+  }
+
+  .input-with-icon {
+    min-height: 40px;
+    padding: 0 10px;
+  }
+
+  .input-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px;
+  }
+}
+
+/* Mejor comportamiento del sticky en algunos navegadores móviles */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}

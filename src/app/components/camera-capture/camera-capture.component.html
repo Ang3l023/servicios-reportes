@@ -1,0 +1,41 @@
+<div class="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4">
+  <div class="bg-white rounded-xl overflow-hidden w-full max-w-lg shadow-2xl">
+
+    <!-- Header -->
+    <div class="bg-slate-800 text-white px-4 py-3 flex justify-between items-center">
+      <h3 class="font-semibold">Tomar foto</h3>
+      <button mat-icon-button (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Video / Preview -->
+    <div class="relative bg-black aspect-video flex items-center justify-center">
+      @if (!isCameraOpen) {
+        <div class="text-center text-white p-6">
+          <mat-icon class="text-5xl mb-3 opacity-70">photo_camera</mat-icon>
+          <p class="mb-4">Accede a la cámara para tomar una foto</p>
+          <button mat-raised-button color="primary" (click)="openCamera()">
+            Abrir cámara
+          </button>
+          @if (errorMessage) {
+            <p class="text-red-400 text-sm mt-3">{{ errorMessage }}</p>
+          }
+        </div>
+      } @else {
+        <video #video autoplay playsinline class="w-full h-full object-cover"></video>
+      }
+    </div>
+
+    <!-- Actions -->
+    @if (isCameraOpen) {
+      <div class="p-4 flex justify-center gap-4 bg-slate-100">
+        <button mat-stroked-button (click)="close()">Cancelar</button>
+        <button mat-raised-button color="primary" (click)="capture()">
+          <mat-icon>camera</mat-icon>
+          Capturar
+        </button>
+      </div>
+    }
+  </div>
+</div>

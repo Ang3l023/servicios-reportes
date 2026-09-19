@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+/* Mientras se arrastra el elemento */
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  background: white;
+  opacity: 0.95;
+}
+
+/* Espacio que deja el elemento al ser arrastrado */
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+/* Animación suave al soltar */
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Cursor */
+.cursor-grab {
+  cursor: grab;
+}
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+/* ========== Animaciones del Drag & Drop ========== */
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  background: white;
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+  background: #f1f5f9;
+  border: 2px dashed #94a3b8;
+  border-radius: 12px;
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ========== Animación al reordenar con botones ========== */
+
+.image-item {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+  box-shadow 200ms ease,
+  background-color 200ms ease;
+}
+
+.image-item.reordering {
+  z-index: 10;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Suavizar el cambio de posición de toda la lista */
+.images-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.images-list .image-item {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
